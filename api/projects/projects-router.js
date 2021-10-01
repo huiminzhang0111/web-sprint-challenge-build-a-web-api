@@ -1,98 +1,73 @@
 // Write your "projects" router here!
 const express = require('express')
+const { checkProjectId, validateProject } = require('./projects-middleware')
 const Project = require('./projects-model')
 const router = express.Router()
 
 //[GET] /api/projects
-router.get('/', (req, res) => {
+router.get('/', (req, res, next) => {
    Project.get(req.params.id)
     .then(projects => {
         res.status(200).json(projects)
     }).catch(error => {
-        res.status(500).json({
-            message: 'Error retrieving the projects',
-          });
+        next(error)
     })
 })
 
-// [GET] /api/projects/:id
-router.get('/:id', async (req, res) => {
-    try {
-        const project = await Project.get(req.params.id)
-        if (!project) {
-            res.status(404).json({
-                message: "Project cannot be found"
-            })
-        } else {
-            res.json(project)
-        }
-    } catch (err) {
-        res.status(500).json({
-            message: "The project information could not be retrieved",
-            err: err.message,
-            stack: err.stack
-        })
-    }
+// [GET] /api/projects/:id with middleware
+router.get('/:id', checkProjectId, (req, res) => {
+    res.status(200).json(req.project)
 })
+// without middleware
+// router.get('/:id', async (req, res, next) => {
+//     try {
+//         const project = await Project.get(req.params.id)
+//         if (!project) {
+//             res.status(404).json({
+//                 message: "Project cannot be found"
+//             })
+//         } else {
+//             res.json(project)
+//         }
+//     } catch (err) {
+//         next(err)
+//     }
+// })
 
 // [POST] /api/projects
-router.post('/', (req, res) => {
+router.post('/', validateProject, (req, res, next) => {
     Project.insert(req.body)
         .then(project => {
             res.status(201).json(project)
-        }).catch(error => {
-            res.status(400).json({
-                message: "Please fill in missing parts"
-            })
-        })
+        }).catch(next)
 })
 
 // [PUT] /api/projects/:id
-router.put('/:id', (req, res) => {
-    const changes = req.body
-    Project.update(req.params.id, changes)
-        .then(project => {
-            if (project) {
-                res.status(200).json(project)
-            } else {
-                res.status(404).json({
-                    message: "Project cannot be found"
-                })
-                }
-        }).catch(error => {
-            res.status(500).json({
-                message: "Error updating project"
-            })
-        })
-    
+router.put('/:id', checkProjectId, validateProject, (req, res, next) => {
+    Project.update(req.params.id, req.body)
+    .then(project => {
+      res.status(200).json(project);
+    })
+    .catch(next);
 })
 
 // [DELETE] /api/projects/:id
-router.delete('/:id', (req, res) => {
+router.delete('/:id', checkProjectId, (req, res, next) => {
     Project.remove(req.params.id)
-        .then (count => {
-            if (count > 0) {
-                res.status(200).json({ message: "Project has been remobed" })
-            } else {
-                res.status(404).json({ message: "Project cannot be found" })
-            }
+        .then (() =>{
+            res.status(200).json({
+                message: "Project has been removed"
+            })
         })
-        .catch(error => {
-            res.status(500).json({
-                message: 'Error removing the project',
-              })
-        })
+        .catch(next)
 })
 
 // [GET] /api/projects/:id/actions
-router.get('/:id/actions', (req, res) => {
+router.get('/:id/actions', checkProjectId, (req, res, next) => {
     Project.getProjectActions(req.params.id)
         .then(projectAction => {
             res.status(200).json(projectAction)
-        }).catch(error => {
-            res.status(500).json({
-                message: "Error retrieving the projects" })
-        })
+        }).catch(next)
 })
 
 module.exports = router
