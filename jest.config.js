@@ -4,6 +4,7 @@
  */
 
 module.exports = {
+  PORT: process.env.PORT || 5000,
   // All imported modules in your tests should be mocked automatically
   // automock: false,
 
