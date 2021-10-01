@@ -19,10 +19,9 @@ router.get('/', (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const project = await Project.get(req.params.id)
-        console.log(project)
         if (!project) {
             res.status(404).json({
-                message: "the project cannot be found"
+                message: "Project cannot be found"
             })
         } else {
             res.json(project)
@@ -57,12 +56,12 @@ router.put('/:id', (req, res) => {
                 res.status(200).json(project)
             } else {
                 res.status(404).json({
-                    message: "project cannot be found"
+                    message: "Project cannot be found"
                 })
                 }
         }).catch(error => {
             res.status(500).json({
-                message: "error updating project"
+                message: "Error updating project"
             })
         })
     
@@ -73,15 +72,26 @@ router.delete('/:id', (req, res) => {
     Project.remove(req.params.id)
         .then (count => {
             if (count > 0) {
-                res.status(200).json({ message: "project has been remobed" })
+                res.status(200).json({ message: "Project has been remobed" })
             } else {
-                res.status(404).json({ message: "project cannot be found" })
+                res.status(404).json({ message: "Project cannot be found" })
             }
         })
         .catch(error => {
             res.status(500).json({
                 message: 'Error removing the project',
               })
+        })
+})
+
+// [GET] /api/projects/:id/actions
+router.get('/:id/actions', (req, res) => {
+    Project.getProjectActions(req.params.id)
+        .then(projectAction => {
+            res.status(200).json(projectAction)
+        }).catch(error => {
+            res.status(500).json({
+                message: "Error retrieving the projects" })
         })
 })
 
